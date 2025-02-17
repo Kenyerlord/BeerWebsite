@@ -1,0 +1,195 @@
+// Checkout.js
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { jwtDecode } from 'jwt-decode'; // Import jwt-decode
+
+const Checkout = ({ cart, setCart }) => {
+    const navigate = useNavigate();
+    const totalPrice = cart.reduce((total, item) => total + (item.beer.Price || 0) * item.quantity, 0);
+
+    // State for shipping information
+    const [shippingInfo, setShippingInfo] = useState({
+        mobile: '',
+        country: '',
+        city: '',
+        street: '',
+        house: '',
+        creditCard: ''
+    });
+
+    // Function to get user ID from token
+    const getUserIdFromToken = () => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            navigate('/login');
+            return null;
+        }
+        const decoded = jwtDecode(token);
+        return decoded.id; // Ensure the token contains the user ID
+    };
+
+    // Fetch user profile information from API endpoint
+    useEffect(() => {
+        const fetchUserProfile = async () => {
+            try {
+                const userId = getUserIdFromToken();
+                if (!userId) return;
+
+                const response = await axios.get(`http://localhost:8080/termek/user/${userId}`, {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
+                if (response.data) {
+                    setShippingInfo({
+                        mobile: response.data.mobile,
+                        country: response.data.countryaddress,
+                        city: response.data.cityaddress,
+                        street: response.data.streetaddress,
+                        house: response.data.houseaddress
+                    });
+                }
+            } catch (error) {
+                console.error('Error fetching user profile:', error);
+            }
+        };
+
+        fetchUserProfile();
+    }, [navigate]);
+
+    // Redirect to home if the cart is empty
+    useEffect(() => {
+        if (cart.length === 0) {
+            navigate('/'); // Redirect to home if the cart is empty
+        }
+    }, [cart, navigate]);
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setShippingInfo(prevInfo => ({
+            ...prevInfo,
+            [name]: value
+        }));
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        // Here you would typically handle the payment processing
+        console.log('Order placed:', {
+            cart,
+            totalPrice,
+            shippingInfo, // Include shipping information
+        });
+        // Clear the cart after placing the order
+        setCart([]);
+        // Redirect to a confirmation page or home
+        navigate('/confirmation');
+    };
+
+    return (
+        <div style={{ padding: '20px', textAlign: 'center' }}>
+            <h1>Checkout</h1>
+            {cart.length === 0 ? (
+                <p>Your cart is empty.</p>
+            ) : (
+                <div>
+                    <h2>Your Items</h2>
+                    <ul style={{ listStyleType: 'none', padding: 0 }}>
+                        {cart.map((item, index) => (
+                            <li key={index} style={{ 
+                                margin: '10px 0', 
+                                border: '1px solid #ccc', 
+                                padding: '10px', 
+                                borderRadius: '5px' 
+                            }}>
+                                {item.beer.Name} - {item.beer.Price ? item.beer.Price.toFixed(2) : 'N/A'}$ 
+                                <span> (Quantity: {item.quantity})</span>
+                            </li>
+                        ))}
+                    </ul>
+                    <h2>Total Price: ${totalPrice.toFixed(2)}</h2>
+                    <form onSubmit={handleSubmit} style={{ marginTop: '20px' }}>
+                        <h3>Shipping Information</h3>
+                        <input 
+                            type="text" 
+                            name="mobile" 
+                            placeholder="Mobile" 
+                            value={shippingInfo.mobile} // Controlled input
+                            onChange={handleChange} 
+                            required 
+                            style={inputStyles} 
+                        />
+                        <input 
+                            type="text" 
+                            name="country" 
+                            placeholder="Country" 
+                            value={shippingInfo.country} // Controlled input
+                            onChange={handleChange} 
+                            required 
+                            style={inputStyles} 
+                        />
+                        <input 
+                            type="text" 
+                            name="city" 
+                            placeholder="City" 
+                            value={shippingInfo.city} // Controlled input
+                            onChange={handleChange} 
+                            required 
+                            style={inputStyles} 
+                        />
+                        <input 
+                            type="text" 
+                            name="street" 
+                            placeholder="Street" 
+                            value={shippingInfo.street} // Controlled input
+                            onChange={handleChange} 
+                            required 
+                            style={inputStyles} 
+                        />
+                        <input 
+                            type="text" 
+                            name="house" 
+                            placeholder="House" 
+                            value={shippingInfo.house} // Controlled input
+                            onChange={handleChange} 
+                            required 
+                            style={inputStyles} 
+                        />
+                        <input 
+                            type="text" 
+                            name="creditCard" 
+                            placeholder="Credit Card Number" 
+                            value={shippingInfo.creditCard} // Controlled input
+                            onChange={handleChange} 
+                            required 
+                            style={inputStyles} 
+                        />
+                        <button type="submit" style={buttonStyles}>Place Order</button>
+                    </form>
+                </div>
+            )}
+        </div>
+    );
+};
+
+const inputStyles = {
+    display: 'block',
+    margin: '10px auto',
+    padding: '10px',
+    width: '80%',
+    borderRadius: '5px',
+    border: '1px solid #ccc',
+};
+
+const buttonStyles = {
+    marginTop: '20px',
+    backgroundColor: '#28a745',
+    color: 'white',
+    border: 'none',
+    borderRadius: '5px',
+    padding: '10px 20px',
+};
+
+export default Checkout;
