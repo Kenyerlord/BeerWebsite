@@ -106,4 +106,35 @@ router.get('/user/:id', async (req, res) => {
     }
 });
 
+router.post('/order', async (req, res) => {
+    const { cart, buyerId } = req.body; // Expecting cart and buyerId in the request body
+    const connection = await Db.pool.getConnection(); // Use the pool from Db
+
+    try {
+        await connection.beginTransaction(); // Start transaction
+
+        // Generate a new bid for this order
+        const [maxBidResult] = await connection.query('SELECT MAX(bid) AS maxBid FROM buyerbeer');
+        const newBid = (maxBidResult[0].maxBid || 0) + 1; // Increment the max bid or start from 1
+
+        // Loop through each item in the cart and insert it into the buyerbeer table
+        for (const item of cart) {
+            const beerId = item.beer.ID; // Assuming each beer has an 'id' property
+            const quantity = item.quantity;
+
+            const query = 'INSERT INTO buyerbeer (bid, beerid1, buyerid, number) VALUES (?, ?, ?, ?)';
+            await connection.query(query, [newBid, beerId, buyerId, quantity]); // Use the new bid
+        }
+
+        await connection.commit(); // Commit transaction
+        res.status(201).json({ success: true, message: 'Order placed successfully', bid: newBid });
+    } catch (error) {
+        await connection.rollback(); // Rollback transaction on error
+        console.error('Error placing order:', error);
+        res.status(500).json({ success: false, message: 'Error placing order' });
+    } finally {
+        connection.release(); // Release the connection
+    }
+});
+
 module.exports = router;

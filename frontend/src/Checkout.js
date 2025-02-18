@@ -1,8 +1,8 @@
-// Checkout.js
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode'; // Import jwt-decode
+import Success from './Success'; // Import the Success component
 
 const Checkout = ({ cart, setCart }) => {
     const navigate = useNavigate();
@@ -20,6 +20,7 @@ const Checkout = ({ cart, setCart }) => {
         paymentMethod: 'Visa', // Default payment method
         deliveryMethod: 'normal' // Default delivery method
     });
+    const [successVisible, setSuccessVisible] = useState(false); // State for success message visibility
 
     // Function to get user ID from token
     const getUserIdFromToken = () => {
@@ -77,12 +78,12 @@ const Checkout = ({ cart, setCart }) => {
         setTotalPrice(basePrice + deliveryFee);
     }, [cart, shippingInfo.deliveryMethod]);
 
-    // Redirect to home if the cart is empty
+    // Redirect to home if the cart is empty and success is not visible
     useEffect(() => {
-        if (cart.length === 0) {
-            navigate('/'); // Redirect to home if the cart is empty
+        if (cart.length === 0 && !successVisible) {
+            navigate('/'); // Redirect to home only if the cart is empty and success is not visible
         }
-    }, [cart, navigate]);
+    }, [cart, navigate, successVisible]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -100,23 +101,47 @@ const Checkout = ({ cart, setCart }) => {
         }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // Here you would typically handle the payment processing
-        console.log('Order placed:', {
-            cart,
-            totalPrice,
-            shippingInfo, // Include shipping information
-        });
-        // Clear the cart after placing the order
-        setCart([]);
-        // Redirect to a confirmation page or home
-        navigate('/confirmation');
+        
+        const userId = getUserIdFromToken(); // Get the user ID from the token
+        if (!userId) return; // If no user ID, do not proceed
+    
+        try {
+            // Send the order details to the backend
+            const response = await axios.post('http://localhost:8080/termek/order', {
+                cart,
+                buyerId: userId // Include the buyer ID
+            }, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+    
+            if (response.data.success) {
+                console.log('Order placed:', {
+                    cart,
+                    totalPrice,
+                    shippingInfo,
+                });
+                // Clear the cart after placing the order
+                setCart([]);
+                // Show the success message
+                setSuccessVisible(true);
+            } else {
+                console.error('Error placing order:', response.data.message);
+            }
+        } catch (error) {
+            console.error('Error placing order:', error);
+        }
     };
 
     return (
         <div style={styles.container}>
             <h1 style={styles.header}>Checkout</h1>
+            {successVisible && ( // Render the Success component if visible
+                <Success onClose={() => setSuccessVisible(false)} />
+            )}
             {cart.length === 0 ? (
                 <p style={styles.emptyCart}>Your cart is empty.</p>
             ) : (

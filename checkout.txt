@@ -6,16 +6,19 @@ import { jwtDecode } from 'jwt-decode'; // Import jwt-decode
 
 const Checkout = ({ cart, setCart }) => {
     const navigate = useNavigate();
-    const totalPrice = cart.reduce((total, item) => total + (item.beer.Price || 0) * item.quantity, 0);
-
-    // State for shipping information
+    const [totalPrice, setTotalPrice] = useState(0);
     const [shippingInfo, setShippingInfo] = useState({
         mobile: '',
         country: '',
         city: '',
         street: '',
         house: '',
-        creditCard: ''
+        creditCard: '',
+        expirationDate: '',
+        cvv: '',
+        cardholderName: '',
+        paymentMethod: 'Visa', // Default payment method
+        deliveryMethod: 'normal' // Default delivery method
     });
 
     // Function to get user ID from token
@@ -43,13 +46,14 @@ const Checkout = ({ cart, setCart }) => {
                 });
 
                 if (response.data) {
-                    setShippingInfo({
+                    setShippingInfo(prevInfo => ({
+                        ...prevInfo,
                         mobile: response.data.mobile,
                         country: response.data.countryaddress,
                         city: response.data.cityaddress,
                         street: response.data.streetaddress,
                         house: response.data.houseaddress
-                    });
+                    }));
                 }
             } catch (error) {
                 console.error('Error fetching user profile:', error);
@@ -58,6 +62,20 @@ const Checkout = ({ cart, setCart }) => {
 
         fetchUserProfile();
     }, [navigate]);
+
+    // Calculate total price
+    useEffect(() => {
+        const basePrice = cart.reduce((total, item) => total + (item.beer.Price || 0) * item.quantity, 0);
+        let deliveryFee = 0;
+
+        if (shippingInfo.deliveryMethod === 'express') {
+            deliveryFee = basePrice * 0.25; // 25% fee
+        } else if (shippingInfo.deliveryMethod === 'normal') {
+            deliveryFee = basePrice * 0.10; // 10% fee
+        }
+
+        setTotalPrice(basePrice + deliveryFee);
+    }, [cart, shippingInfo.deliveryMethod]);
 
     // Redirect to home if the cart is empty
     useEffect(() => {
@@ -74,99 +92,190 @@ const Checkout = ({ cart, setCart }) => {
         }));
     };
 
-    const handleSubmit = (e) => {
+    const handleDeliveryChange = (e) => {
+        const { value } = e.target;
+        setShippingInfo(prevInfo => ({
+            ...prevInfo,
+            deliveryMethod: value
+        }));
+    };
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // Here you would typically handle the payment processing
-        console.log('Order placed:', {
-            cart,
-            totalPrice,
-            shippingInfo, // Include shipping information
-        });
-        // Clear the cart after placing the order
-        setCart([]);
-        // Redirect to a confirmation page or home
-        navigate('/confirmation');
+        
+        const userId = getUserIdFromToken(); // Get the user ID from the token
+        if (!userId) return; // If no user ID, do not proceed
+    
+        try {
+            // Send the order details to the backend
+            const response = await axios.post('http://localhost:8080/termek/order', {
+                cart,
+                buyerId: userId // Include the buyer ID
+            }, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+    
+            if (response.data.success) {
+                console.log('Order placed:', {
+                    cart,
+                    totalPrice,
+                    shippingInfo,
+                });
+                // Clear the cart after placing the order
+                setCart([]);
+                // Redirect to a confirmation page or home
+                navigate('/confirmation');
+            } else {
+                console.error('Error placing order:', response.data.message);
+            }
+        } catch (error) {
+            console.error('Error placing order:', error);
+        }
     };
 
     return (
-        <div style={{ padding: '20px', textAlign: 'center' }}>
-            <h1>Checkout</h1>
+        <div style={styles.container}>
+            <h1 style={styles.header}>Checkout</h1>
             {cart.length === 0 ? (
-                <p>Your cart is empty.</p>
+                <p style={styles.emptyCart}>Your cart is empty.</p>
             ) : (
                 <div>
-                    <h2>Your Items</h2>
-                    <ul style={{ listStyleType: 'none', padding: 0 }}>
+                    <h2 style={styles.subHeader}>Your Items</h2>
+                    <ul style={styles.itemList}>
                         {cart.map((item, index) => (
-                            <li key={index} style={{ 
-                                margin: '10px 0', 
-                                border: '1px solid #ccc', 
-                                padding: '10px', 
-                                borderRadius: '5px' 
-                            }}>
+                            <li key={index} style={styles.item}>
                                 {item.beer.Name} - {item.beer.Price ? item.beer.Price.toFixed(2) : 'N/A'}$ 
                                 <span> (Quantity: {item.quantity})</span>
                             </li>
                         ))}
                     </ul>
-                    <h2>Total Price: ${totalPrice.toFixed(2)}</h2>
-                    <form onSubmit={handleSubmit} style={{ marginTop: '20px' }}>
-                        <h3>Shipping Information</h3>
+                    
+                    <form onSubmit={handleSubmit} style={styles.form}>
+                        <h3 style={styles.sectionHeader}>Shipping Information</h3>
                         <input 
                             type="text" 
                             name="mobile" 
                             placeholder="Mobile" 
-                            value={shippingInfo.mobile} // Controlled input
+                            value={shippingInfo.mobile} 
                             onChange={handleChange} 
                             required 
-                            style={inputStyles} 
+                            style={styles.input} 
                         />
                         <input 
                             type="text" 
                             name="country" 
                             placeholder="Country" 
-                            value={shippingInfo.country} // Controlled input
+                            value={shippingInfo.country} 
                             onChange={handleChange} 
                             required 
-                            style={inputStyles} 
+                            style={styles.input} 
                         />
                         <input 
                             type="text" 
                             name="city" 
                             placeholder="City" 
-                            value={shippingInfo.city} // Controlled input
+                            value={shippingInfo.city} 
                             onChange={handleChange} 
                             required 
-                            style={inputStyles} 
+                            style={styles.input} 
                         />
                         <input 
                             type="text" 
                             name="street" 
                             placeholder="Street" 
-                            value={shippingInfo.street} // Controlled input
+                            value={shippingInfo.street} 
                             onChange={handleChange} 
                             required 
-                            style={inputStyles} 
+                            style={styles.input} 
                         />
                         <input 
                             type="text" 
                             name="house" 
                             placeholder="House" 
-                            value={shippingInfo.house} // Controlled input
+                            value={shippingInfo.house} 
                             onChange={handleChange} 
                             required 
-                            style={inputStyles} 
+                            style={styles.input} 
                         />
+                        <h3 style={styles.sectionHeader}>Payment Information</h3>
+                        <select 
+                            name="paymentMethod" 
+                            value={shippingInfo.paymentMethod} 
+                            onChange={handleChange} 
+                            style={styles.select}
+                        >
+                            <option value="Visa">Visa</option>
+                            <option value="MasterCard">MasterCard</option>
+                            <option value="PayPal">PayPal</option>
+                        </select>
                         <input 
                             type="text" 
                             name="creditCard" 
-                            placeholder="Credit Card Number" 
-                            value={shippingInfo.creditCard} // Controlled input
+                            placeholder="Card Number" 
+                            value={shippingInfo.creditCard} 
                             onChange={handleChange} 
                             required 
-                            style={inputStyles} 
+                            style={styles.input} 
                         />
-                        <button type="submit" style={buttonStyles}>Place Order</button>
+                        <input 
+                            type="text" 
+                            name="expirationDate" 
+                            placeholder="Expiration Date (MM/YY)" 
+                            value={shippingInfo.expirationDate} 
+                            onChange={handleChange} 
+                            required 
+                            style={styles.input} 
+                        />
+                        <input 
+                            type="text" 
+                            name="cvv" 
+                            placeholder="CVV" 
+                            value={shippingInfo.cvv} 
+                            onChange={handleChange} 
+                            required 
+                            style={styles.input} 
+                        />
+                        <input 
+                            type="text" 
+                            name="cardholderName" 
+                            placeholder="Cardholder Name" 
+                            value={shippingInfo.cardholderName} 
+                            onChange={handleChange} 
+                            required 
+                            style={styles.input} 
+                        />
+                        <h3 style={styles.sectionHeader}>Delivery Method</h3>
+                        <label style={styles.radioLabel}>
+                            <input 
+                                type="radio" 
+                                value="express" 
+                                checked={shippingInfo.deliveryMethod === 'express'} 
+                                onChange={handleDeliveryChange} 
+                            />
+                            Express Delivery (+25%)(Approx.:2-3 business days)
+                        </label>
+                        <label style={styles.radioLabel}>
+                            <input 
+                                type="radio" 
+                                value="normal" 
+                                checked={shippingInfo.deliveryMethod === 'normal'} 
+                                onChange={handleDeliveryChange} 
+                            />
+                            Normal Delivery (+10%)(Approx.:7-10 business days)
+                        </label>
+                        <label style={styles.radioLabel}>
+                            <input 
+                                type="radio" 
+                                value="noFee" 
+                                checked={shippingInfo.deliveryMethod === 'noFee'} 
+                                onChange={handleDeliveryChange} 
+                            />
+                            We Get There When We Get There (no fee)(Approx.: 2-4 weeks)
+                        </label>
+                        <h2 style={styles.totalPrice}>Total Price: ${totalPrice.toFixed(2)}</h2>
+                        <button type="submit" style={styles.button}>Place Order</button>
                     </form>
                 </div>
             )}
@@ -174,22 +283,92 @@ const Checkout = ({ cart, setCart }) => {
     );
 };
 
-const inputStyles = {
-    display: 'block',
-    margin: '10px auto',
-    padding: '10px',
-    width: '80%',
-    borderRadius: '5px',
-    border: '1px solid #ccc',
-};
-
-const buttonStyles = {
-    marginTop: '20px',
-    backgroundColor: '#28a745',
-    color: 'white',
-    border: 'none',
-    borderRadius: '5px',
-    padding: '10px 20px',
+const styles = {
+  container: {
+      padding: '20px',
+      textAlign: 'center',
+      backgroundColor: '#363636', // Set background to grey
+      borderRadius: '10px',
+      boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+      maxWidth: '600px',
+      margin: '20px auto',
+  },
+  header: {
+      fontSize: '2rem',
+      color: '#000', // Set text color to black
+      marginBottom: '20px',
+      color:"white",
+  },
+  emptyCart: {
+      fontSize: '1.2rem',
+      color: '#000', // Set text color to black
+  },
+  subHeader: {
+      fontSize: '1.5rem',
+      color: '#000', // Set text color to black
+      marginBottom: '15px',
+      color:"white",
+  },
+  itemList: {
+      listStyleType: 'none',
+      padding: 0,
+  },
+  item: {
+      margin: '10px 0',
+      border: '1px solid #ccc',
+      padding: '10px',
+      borderRadius: '5px',
+      backgroundColor: '#fff',
+      color: "black",
+  },
+  totalPrice: {
+      fontSize: '1.5rem',
+      color: '#28a745',
+      margin: '20px 0',
+  },
+  form: {
+      marginTop: '20px',
+  },
+  sectionHeader: {
+      fontSize: '1.3rem',
+      color: '#000', // Set text color to black
+      marginBottom: '15px',
+      color:"white",
+  },
+  input: {
+      display: 'block',
+      margin: '10px auto',
+      padding: '10px',
+      width: '80%',
+      borderRadius: '5px',
+      border: '1px solid #ccc',
+      fontSize: '1rem',
+  },
+  select: {
+      display: 'block',
+      margin: '10px auto',
+      padding: '10px',
+      width: '80%',
+      borderRadius: '5px',
+      border: '1px solid #ccc',
+      fontSize: '1rem',
+  },
+  radioLabel: {
+      display: 'block',
+      margin: '10px auto',
+      fontSize: '1rem',
+      color:"white",
+  },
+  button: {
+      marginTop: '20px',
+      backgroundColor: '#28a745',
+      color: 'white',
+      border: 'none',
+      borderRadius: '5px',
+      padding: '10px 20px',
+      fontSize: '1rem',
+      cursor: 'pointer',
+  },
 };
 
 export default Checkout;
