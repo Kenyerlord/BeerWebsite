@@ -12,24 +12,23 @@ import LogIn from './Login';
 import UserProfile from './UserProfile';
 import BeerInfo from './beerinfo';
 import Rack from './Rack';
-import Checkout from './Checkout'; // Import the Checkout component
+import Checkout from './Checkout'; 
 import { jwtDecode } from 'jwt-decode';
 
 function App() {
     const [showModel, setShowModel] = useState(false);
     const [cart, setCart] = useState([]);
-    const [user, setUser  ] = useState(null); // State for the logged-in user
+    const [user, setUser  ] = useState(null); 
     const navigate = useNavigate();
 
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (token) {
             try {
-                const decoded = jwtDecode(token); // Decode the token to get user info
-                setUser  ({ name: decoded.name }); // Set the user state with the decoded name
+                const decoded = jwtDecode(token); 
+                setUser  ({ name: decoded.name }); 
             } catch (error) {
                 console.error('Token decoding failed:', error);
-                // Optionally handle token expiration or invalid token
             }
         }
     }, []);
@@ -56,7 +55,6 @@ function App() {
                 updatedCart = [...prevCart, { beer, quantity: 1 }];
             }
             
-            // Save the updated cart to local storage
             localStorage.setItem('cart', JSON.stringify(updatedCart));
             return updatedCart;
         });
@@ -64,9 +62,9 @@ function App() {
 
     const handleLogout = () => {
         console.log("Logging out...");
-        localStorage.removeItem('token'); // Remove the token from local storage
-        setUser  (null); // Clear the user state
-        navigate('/'); // Navigate to the home page
+        localStorage.removeItem('token'); 
+        setUser  (null); 
+        navigate('/');
     };
 
     const removeFromRack = (index) => {
@@ -78,17 +76,17 @@ function App() {
 
     return (
         <div style={appStyle}>
-            <Menu user={user} handleLogout={handleLogout} /> {/* Pass user state and handleLogout to Menu */}
+            <Menu user={user} handleLogout={handleLogout} /> 
             <main style={mainStyle}>
                 <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/catalog" element={<Catalog addToRack={addToRack} />} />
                     <Route path="/signup" element={<SignUp />} />
-                    <Route path="/login" element={<LogIn setUser  ={setUser  } />} /> {/* Pass setUser   to LogIn */}
+                    <Route path="/login" element={<LogIn setUser  ={setUser  } />} /> 
                     <Route path="/userprofile" element={<UserProfile user={user} />} />
                     <Route path="/beer/:name" element={<BeerInfo addToRack={addToRack} />} />
                     <Route path="/rack" element={<Rack cart={cart} setCart={setCart} removeFromRack={removeFromRack} />} />
-                    <Route path="/checkout" element={<Checkout cart={cart} setCart={setCart} />} /> {/* Add the Checkout route */}
+                    <Route path="/checkout" element={<Checkout cart={cart} setCart={setCart} />} /> 
                 </Routes>
             </main>
             <Footer />

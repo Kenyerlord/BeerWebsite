@@ -85,15 +85,12 @@ const Catalog = ({ addToRack }) => {
     return matchesSearchTerm && matchesType && matchesCountry && matchesBVolume && matchesBType && matchesAlcoholLevel && matchesPrice;
   });
 
-  // Calculate total pages
   const totalPages = Math.ceil(filteredBeers.length / ITEMS_PER_PAGE);
-  
-  // Slice the filtered beers for the current page
+
   const displayedBeers = filteredBeers.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   return (
     <div style={{ padding: '20px', textAlign: 'center' }}>
-      {/* Search Bar */}
       <div style={{ marginBottom: '20px' }}>
         <input
           type="text"
@@ -109,9 +106,7 @@ const Catalog = ({ addToRack }) => {
         />
       </div>
 
-      {/* Main Content Container */}
       <div style={{ display: 'flex' }}>
-        {/* Filters Container */}
         <div style={{ 
           flex: '0 0 250px', 
           marginRight: '20px', 
@@ -120,7 +115,6 @@ const Catalog = ({ addToRack }) => {
           padding: '20px', 
           borderRadius: '5px' 
         }}>
-          {/* Filters */}
           <div style={{ marginBottom: '20px' }}>
   <select 
     onChange={(e) => setSelectedType(e.target.value)} 
@@ -213,8 +207,6 @@ const Catalog = ({ addToRack }) => {
       <option key={key} value={key}>{value}</option>
     ))}
   </select>
-
-            {/* Alcohol Level Sliders */}
             <div style={{ marginBottom: '20px' }}>
               <label style={{ display: 'block', marginBottom: '10px' }}>Alcohol Level: {minAlcoholLevel}% - {maxAlcoholLevel}%</label>
               <input
@@ -222,12 +214,12 @@ const Catalog = ({ addToRack }) => {
                 min="1"
                 max="7"
                 value={minAlcoholLevel}
-                style={{ width: '100%' }} // Set width to 100%
+                style={{ width: '100%' }} 
                 onChange={(e) => {
                   const newMin = Number(e.target.value);
                   setMinAlcoholLevel(newMin);
                   if (newMin > maxAlcoholLevel) {
-                    setMaxAlcoholLevel(newMin); // Adjust max if new min exceeds it
+                    setMaxAlcoholLevel(newMin);
                   }
                 }}
               />
@@ -236,18 +228,16 @@ const Catalog = ({ addToRack }) => {
                 min="1"
                 max="7"
                 value={maxAlcoholLevel}
-                style={{ width: '100%' }} // Set width to 100%
+                style={{ width: '100%' }} 
                 onChange={(e) => {
                   const newMax = Number(e.target.value);
                   setMaxAlcoholLevel(newMax);
                   if (newMax < minAlcoholLevel) {
-                    setMinAlcoholLevel(newMax); // Adjust min if new max is less than it
+                    setMinAlcoholLevel(newMax); 
                   }
                 }}
               />
             </div>
-
-            {/* Price Sliders */}
             <div style={{ marginBottom: '20px' }}>
               <label style={{ display: 'block', marginBottom: '10px' }}>Price: ${minPrice.toFixed(2)} - ${maxPrice.toFixed(2)}</label>
               <input
@@ -256,12 +246,12 @@ const Catalog = ({ addToRack }) => {
                 max="9.99"
                 step="0.01"
                 value={minPrice}
-                style={{ width: '100%' }} // Set width to 100%
+                style={{ width: '100%' }}
                 onChange={(e) => {
                   const newMin = Number(e.target.value);
                   setMinPrice(newMin);
                   if (newMin > maxPrice) {
-                    setMaxPrice(newMin); // Adjust max if new min exceeds it
+                    setMaxPrice(newMin);
                   }
                 }}
               />
@@ -271,20 +261,18 @@ const Catalog = ({ addToRack }) => {
                 max="9.99"
                 step="0.01"
                 value={maxPrice}
-                style={{ width: '100%' }} // Set width to 100%
+                style={{ width: '100%' }}
                 onChange={(e) => {
                   const newMax = Number(e.target.value);
                   setMaxPrice(newMax);
                   if (newMax < minPrice) {
-                    setMinPrice(newMax); // Adjust min if new max is less than it
+                    setMinPrice(newMax);
                   }
                 }}
               />
             </div>
           </div>
         </div>
-
-        {/* Beer Cards */}
         <div style={{ flex: '1', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px' }}>
         {displayedBeers.map((beer) => (
           <BeerCard key={beer.Name} beer={beer} addToRack={addToRack} />
@@ -292,7 +280,6 @@ const Catalog = ({ addToRack }) => {
       </div>
       </div>
 
-      {/* Pagination Controls */}
       <div style={{ marginTop: '20px' }}>
   <button 
     onClick={() => setCurrentPage(1)} 

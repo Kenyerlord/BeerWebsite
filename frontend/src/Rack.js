@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Modal from './Modal'; // Import the Modal component
+import Modal from './Modal'; 
 import notAvailableImage from './assets/notavailable.webp';
 
 const Rack = ({ cart, setCart, removeFromRack }) => {
   const navigate = useNavigate();
-  const [isModalOpen, setIsModalOpen] = useState(false); // State to manage modal visibility
+  const [isModalOpen, setIsModalOpen] = useState(false); 
   const totalPrice = cart.reduce((total, item) => total + (item.beer.Price || 0) * item.quantity, 0);
 
   const increaseQuantity = (index) => {
@@ -31,6 +31,7 @@ const Rack = ({ cart, setCart, removeFromRack }) => {
     setCart(updatedCart);
     localStorage.setItem('cart', JSON.stringify(updatedCart));
     removeFromRack(index);
+    window.location.reload();
   };
 
   useEffect(() => {
@@ -45,16 +46,14 @@ const Rack = ({ cart, setCart, removeFromRack }) => {
   const handlePlaceOrder = () => {
     const token = localStorage.getItem('token');
     if (!token) {
-      // If the user is not logged in, show the modal
       setIsModalOpen(true);
     } else {
-      // User is logged in, navigate to the Checkout page
       navigate('/checkout');
     }
   };
 
   const closeModal = () => {
-    setIsModalOpen(false); // Close the modal
+    setIsModalOpen(false); 
   };
 
   return (
@@ -82,14 +81,14 @@ const Rack = ({ cart, setCart, removeFromRack }) => {
             e.target.onerror = null;
             e.target.src = notAvailableImage;
           }}
-          style={{ width: '50px', height: 'auto', borderRadius: '5px', marginRight: '10px' }} // Adjusted width and added margin
+          style={{ width: '50px', height: 'auto', borderRadius: '5px', marginRight: '10px' }} 
         />
-        <span style={{ fontSize: '18px' }}> {/* Increased font size here */}
+        <span style={{ fontSize: '18px' }}> 
           {item.beer.Name} - {item.beer.Price ? item.beer.Price.toFixed(2) : 'N/A'}$ 
           <span> (Quantity: {item.quantity})</span>
         </span>
       </div>
-      <div style={{ marginLeft: 'auto' }}> {/* This will push the buttons to the right */}
+      <div style={{ marginLeft: 'auto' }}>
         <button 
           onClick={() => increaseQuantity(index)} 
           style={{ 

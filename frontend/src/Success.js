@@ -1,13 +1,12 @@
-// Success.js
 import React from 'react';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate for navigation
+import { useNavigate } from 'react-router-dom'; 
 
 const Success = ({ onClose }) => {
-  const navigate = useNavigate(); // Initialize useNavigate
+  const navigate = useNavigate(); 
 
   const handleBackToHome = () => {
-    navigate('/'); // Navigate to the home page
-    onClose(); // Close the success message
+    navigate('/'); 
+    onClose(); 
   };
 
   return (

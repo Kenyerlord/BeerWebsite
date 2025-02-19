@@ -52,8 +52,8 @@ const BeerInfo = ({ addToRack }) => {
     const fetchBeer = async () => {
       try {
         const response = await axios.get(`http://localhost:8080/termek`);
-        console.log('Fetched beer data:', response.data); // Log the response data
-        const fetchedBeer = response.data.find(b => b.Name === name); // Adjust this line
+        console.log('Fetched beer data:', response.data); 
+        const fetchedBeer = response.data.find(b => b.Name === name); 
         console.log('Fetched beer:', fetchedBeer);
         setBeer(fetchedBeer);
       } catch (error) {
@@ -68,7 +68,7 @@ const BeerInfo = ({ addToRack }) => {
     return <div>{error}</div>;
   }
   if (!beer) {
-    return <div>Beer not found.</div>; // Display a message if the beer is not found
+    return <div>Beer not found.</div>; 
   }
   console.log('Beer name from URL:', name);
   
@@ -82,7 +82,7 @@ const BeerInfo = ({ addToRack }) => {
           e.target.onerror = null;
           e.target.src = notAvailableImage;
         }}
-        style={{ width: '500px', height: 'auto', borderRadius: '5px', marginRight: '20px' }} // Add margin to the right
+        style={{ width: '500px', height: 'auto', borderRadius: '5px', marginRight: '20px' }} 
       />
       <p>*The Image is just an Illustration and not representitive of the product*</p>
         </div>

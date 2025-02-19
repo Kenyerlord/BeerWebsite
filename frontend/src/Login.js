@@ -21,9 +21,9 @@ const Login = ({ setUser  }) => {
             if (response.data.token) {
                 setSuccess('Login Successful');
                 setError('');
-                localStorage.setItem('token', response.data.token); // Store the token in local storage
-                setUser ({ name }); // Set the user state with the logged-in user's name
-                navigate('/'); // Navigate to the home page or desired route
+                localStorage.setItem('token', response.data.token); 
+                setUser ({ name }); 
+                navigate('/'); 
             } else {
                 setError('Invalid username or password');
                 setSuccess('');

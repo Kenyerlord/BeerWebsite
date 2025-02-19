@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { jwtDecode } from 'jwt-decode'; // Import jwt-decode
+import { jwtDecode } from 'jwt-decode'; 
 
 const UserProfile = ({ user }) => {
     const [profile, setProfile] = useState({
@@ -15,7 +15,6 @@ const UserProfile = ({ user }) => {
     const [success, setSuccess] = useState('');
     const navigate = useNavigate();
 
-    // Decode the token to get the user ID
     const getUserIdFromToken = () => {
         const token = localStorage.getItem('token');
         if (!token) {
@@ -24,7 +23,7 @@ const UserProfile = ({ user }) => {
         }
         const decoded = jwtDecode(token);
         console.log('User  ID from token:', decoded.id);
-        return decoded.id; // Ensure the token contains the user ID
+        return decoded.id;
     };
 
     useEffect(() => {
@@ -75,7 +74,7 @@ const UserProfile = ({ user }) => {
                 houseaddress: profile.houseaddress
             };
 
-            console.log('Sending payload:', payload); // Log the payload
+            console.log('Sending payload:', payload); 
 
             const response = await axios.put(
                 'http://localhost:8080/termek/update',

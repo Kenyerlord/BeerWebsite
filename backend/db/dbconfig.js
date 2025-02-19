@@ -1,4 +1,3 @@
-//mysql2
 const config = {
     host: 'localhost',
     user: 'root',

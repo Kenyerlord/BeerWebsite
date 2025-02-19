@@ -10,9 +10,9 @@ const BeerCard = ({ beer, addToRack }) => {
       padding: '10px', 
       display: 'flex', 
       flexDirection: 'column', 
-      height: '100%', // Ensure the card takes full height
-      justifyContent: 'space-between', // Space between items
-      backgroundColor: '#363636' // Set background color
+      height: '100%',
+      justifyContent: 'space-between', 
+      backgroundColor: '#363636' 
     }}>
       <Link to={`/beer/${beer.Name}`} style={{ color: 'white', textDecoration: 'none', flexGrow: 1 }}>
         <img

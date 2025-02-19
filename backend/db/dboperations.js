@@ -22,9 +22,9 @@ async function selectCard() {
 }
 
 async function selectUser (name, password) {
-    console.log('Querying user with:', { name, password }); // Log the input values
+    console.log('Querying user with:', { name, password });
     const query = 'SELECT * FROM buyer WHERE name = ? AND password = ?';
-    const [result] = await pool.query(query, [name, password]); // Use pool.query instead of db.execute
+    const [result] = await pool.query(query, [name, password]); 
 
     return result.length > 0 ? result[0] : null;
 }
@@ -49,33 +49,33 @@ async function selectUserById(userId) {
     const query = 'SELECT mobile, countryaddress, cityaddress, streetaddress, houseaddress FROM buyer WHERE bid = ?';
     const [result] = await pool.query(query, [userId]);
 
-    return result.length > 0 ? result[0] : null; // Return the user data or null if not found
+    return result.length > 0 ? result[0] : null; 
 }
 
 async function insertOrder(cart, buyerId) {
     const connection = await pool.getConnection();
     try {
-        await connection.beginTransaction(); // Start transaction
+        await connection.beginTransaction();
 
         const [maxBidResult] = await connection.query('SELECT MAX(bid) AS maxBid FROM buyerbeer');
-        const newBid = (maxBidResult[0].maxBid || 0) + 1; // Increment the max bid or start from 1
+        const newBid = (maxBidResult[0].maxBid || 0) + 1; 
 
         for (const item of cart) {
-            const beerId = item.beer.id; // Assuming each beer has an 'id' property
+            const beerId = item.beer.id; 
             const quantity = item.quantity;
 
             const query = 'INSERT INTO buyerbeer (bid, beerid1, buyerid, number) VALUES (?, ?, ?, ?)';
-            await connection.query(query, [newBid, beerId, buyerId, quantity]); // Use the new bid
+            await connection.query(query, [newBid, beerId, buyerId, quantity]); 
         }
 
-        await connection.commit(); // Commit transaction
+        await connection.commit();
         return { success: true, message: 'Order placed successfully', bid: newBid };
     } catch (error) {
-        await connection.rollback(); // Rollback transaction on error
+        await connection.rollback();
         console.error('Error inserting order:', error);
-        throw error; // Rethrow the error to be handled in the route
+        throw error;
     } finally {
-        connection.release(); // Release the connection
+        connection.release(); 
     }
 }
 

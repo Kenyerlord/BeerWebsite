@@ -3,7 +3,6 @@ var router = express.Router();
 var Db = require('../db/dboperations');
 var jwt = require('jsonwebtoken');
 
-// Get all products
 router.get('/', async function(req, res, next) {
     try {
         const termek = await Db.selectTermek();
@@ -13,7 +12,6 @@ router.get('/', async function(req, res, next) {
     }
 });
 
-// Get card information
 router.get('/card', async (req, res) => {
     try {
         const card = await Db.selectCard();
@@ -23,7 +21,6 @@ router.get('/card', async (req, res) => {
     }
 });
 
-// User authentication
 router.get('/account', async function(req, res, next) {
     const { name, password } = req.query;
     console.log('Received:', { name, password });
@@ -39,12 +36,11 @@ router.get('/account', async function(req, res, next) {
     }
 });
 
-// Sign up route
 router.post('/signup', async (req, res) => {
     const { name, email, password } = req.body;
 
     try {
-        await Db.insertUser (name, password, email); // Call the insertUser  function
+        await Db.insertUser (name, password, email); 
         res.status(201).json({ success: true, message: 'User  created successfully' });
     } catch (error) {
         console.error('Error creating user:', error);
@@ -53,12 +49,12 @@ router.post('/signup', async (req, res) => {
 });
 
 router.put('/update', async (req, res) => {
-    console.log('Received update request:', req.body); // Log the incoming request
+    console.log('Received update request:', req.body); 
     const { bid, mobile, countryaddress, cityaddress, streetaddress, houseaddress } = req.body;
 
     try {
         const result = await Db.updateUser (bid, mobile, countryaddress, cityaddress, streetaddress, houseaddress);
-        console.log('Update result:', result); // Log the result from the database
+        console.log('Update result:', result); 
         if (result.affectedRows > 0) {
             res.json({ success: true, message: 'User  updated successfully' });
         } else {
@@ -66,7 +62,7 @@ router.put('/update', async (req, res) => {
         }
     } catch (error) {
         console.error('Error updating user:', error);
-        console.error('Error details:', error.message); // Log the error message
+        console.error('Error details:', error.message); 
         res.status(400).json({ success: false, message: 'Error updating user', error: error.message });
     }
 });
@@ -78,7 +74,6 @@ router.post('/login', async function(req, res, next) {
     try {
         const user = await Db.selectUser (name, password);
         if (user) {
-            // Include the user ID in the token payload
             const token = jwt.sign({ id: user.bid, name: user.name }, JWT_SECRET, { expiresIn: '1800s' });
             res.json({ success: true, token });
         } else {
@@ -89,14 +84,13 @@ router.post('/login', async function(req, res, next) {
     }
 });
 
-// Get user profile by ID
 router.get('/user/:id', async (req, res) => {
-    const userId = req.params.id; // Get the user ID from the request parameters
+    const userId = req.params.id; 
 
     try {
-        const user = await Db.selectUserById(userId); // Call the function to get user data by ID
+        const user = await Db.selectUserById(userId); 
         if (user) {
-            res.json(user); // Send the user data as a response
+            res.json(user); 
         } else {
             res.status(404).json({ success: false, message: 'User  not found' });
         }
@@ -107,33 +101,29 @@ router.get('/user/:id', async (req, res) => {
 });
 
 router.post('/order', async (req, res) => {
-    const { cart, buyerId } = req.body; // Expecting cart and buyerId in the request body
-    const connection = await Db.pool.getConnection(); // Use the pool from Db
+    const { cart, buyerId } = req.body; 
+    const connection = await Db.pool.getConnection(); 
 
     try {
-        await connection.beginTransaction(); // Start transaction
-
-        // Generate a new bid for this order
+        await connection.beginTransaction(); 
         const [maxBidResult] = await connection.query('SELECT MAX(bid) AS maxBid FROM buyerbeer');
-        const newBid = (maxBidResult[0].maxBid || 0) + 1; // Increment the max bid or start from 1
-
-        // Loop through each item in the cart and insert it into the buyerbeer table
+        const newBid = (maxBidResult[0].maxBid || 0) + 1;
         for (const item of cart) {
-            const beerId = item.beer.ID; // Assuming each beer has an 'id' property
+            const beerId = item.beer.ID; 
             const quantity = item.quantity;
 
             const query = 'INSERT INTO buyerbeer (bid, beerid1, buyerid, number) VALUES (?, ?, ?, ?)';
-            await connection.query(query, [newBid, beerId, buyerId, quantity]); // Use the new bid
+            await connection.query(query, [newBid, beerId, buyerId, quantity]);
         }
 
-        await connection.commit(); // Commit transaction
+        await connection.commit();
         res.status(201).json({ success: true, message: 'Order placed successfully', bid: newBid });
     } catch (error) {
-        await connection.rollback(); // Rollback transaction on error
+        await connection.rollback(); 
         console.error('Error placing order:', error);
         res.status(500).json({ success: false, message: 'Error placing order' });
     } finally {
-        connection.release(); // Release the connection
+        connection.release(); 
     }
 });
 

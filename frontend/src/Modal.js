@@ -1,17 +1,17 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate for navigation
+import { useNavigate } from 'react-router-dom'; 
 
 const Modal = ({ message, onClose }) => {
-  const navigate = useNavigate(); // Initialize useNavigate
+  const navigate = useNavigate(); 
 
   const handleGoToLogin = () => {
-    navigate('/login'); // Navigate to the login page
-    onClose(); // Close the modal
+    navigate('/login'); 
+    onClose(); 
   };
 
   const handleGoToSignUp = () => {
-    navigate('/signup'); // Navigate to the sign-up page
-    onClose(); // Close the modal
+    navigate('/signup'); 
+    onClose(); 
   };
 
   return (
@@ -56,7 +56,7 @@ const modalStyles = {
     padding: '5px 10px',
   },
   closeButton: {
-    backgroundColor: '#dc3545', // Red color for the close button
+    backgroundColor: '#dc3545', 
     color: 'white',
     border: 'none',
     borderRadius: '5px',

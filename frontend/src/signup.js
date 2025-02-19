@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom'; // Import Link here
+import { useNavigate, Link } from 'react-router-dom'; 
 
 const SignUp = () => {
     const [name, setName] = useState('');
@@ -24,7 +24,6 @@ const SignUp = () => {
             const data = await response.json();
 
             if (response.ok) {
-                // Redirect to login or user profile after successful signup
                 navigate('/login');
             } else {
                 setError(data.message || 'Signup failed');
