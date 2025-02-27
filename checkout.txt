@@ -1,8 +1,8 @@
-// Checkout.js
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { jwtDecode } from 'jwt-decode'; // Import jwt-decode
+import { jwtDecode } from 'jwt-decode';
+import Success from './Success'; 
 
 const Checkout = ({ cart, setCart }) => {
     const navigate = useNavigate();
@@ -17,11 +17,12 @@ const Checkout = ({ cart, setCart }) => {
         expirationDate: '',
         cvv: '',
         cardholderName: '',
-        paymentMethod: 'Visa', // Default payment method
-        deliveryMethod: 'normal' // Default delivery method
+        paymentMethod: 'Visa', 
+        deliveryMethod: 'normal' 
     });
+    const [successVisible, setSuccessVisible] = useState(false);
 
-    // Function to get user ID from token
+   
     const getUserIdFromToken = () => {
         const token = localStorage.getItem('token');
         if (!token) {
@@ -29,10 +30,10 @@ const Checkout = ({ cart, setCart }) => {
             return null;
         }
         const decoded = jwtDecode(token);
-        return decoded.id; // Ensure the token contains the user ID
+        return decoded.id; 
     };
 
-    // Fetch user profile information from API endpoint
+    
     useEffect(() => {
         const fetchUserProfile = async () => {
             try {
@@ -63,26 +64,25 @@ const Checkout = ({ cart, setCart }) => {
         fetchUserProfile();
     }, [navigate]);
 
-    // Calculate total price
+    
     useEffect(() => {
         const basePrice = cart.reduce((total, item) => total + (item.beer.Price || 0) * item.quantity, 0);
         let deliveryFee = 0;
 
         if (shippingInfo.deliveryMethod === 'express') {
-            deliveryFee = basePrice * 0.25; // 25% fee
+            deliveryFee = basePrice * 0.25; 
         } else if (shippingInfo.deliveryMethod === 'normal') {
-            deliveryFee = basePrice * 0.10; // 10% fee
+            deliveryFee = basePrice * 0.10; 
         }
 
         setTotalPrice(basePrice + deliveryFee);
     }, [cart, shippingInfo.deliveryMethod]);
 
-    // Redirect to home if the cart is empty
     useEffect(() => {
-        if (cart.length === 0) {
-            navigate('/'); // Redirect to home if the cart is empty
+        if (cart.length === 0 && !successVisible) {
+            navigate('/'); 
         }
-    }, [cart, navigate]);
+    }, [cart, navigate, successVisible]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -103,14 +103,13 @@ const Checkout = ({ cart, setCart }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         
-        const userId = getUserIdFromToken(); // Get the user ID from the token
-        if (!userId) return; // If no user ID, do not proceed
+        const userId = getUserIdFromToken(); 
+        if (!userId) return;
     
         try {
-            // Send the order details to the backend
             const response = await axios.post('http://localhost:8080/termek/order', {
                 cart,
-                buyerId: userId // Include the buyer ID
+                buyerId: userId 
             }, {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem('token')}`
@@ -123,10 +122,9 @@ const Checkout = ({ cart, setCart }) => {
                     totalPrice,
                     shippingInfo,
                 });
-                // Clear the cart after placing the order
                 setCart([]);
-                // Redirect to a confirmation page or home
-                navigate('/confirmation');
+                localStorage.setItem('cart', JSON.stringify([]));
+                setSuccessVisible(true);
             } else {
                 console.error('Error placing order:', response.data.message);
             }
@@ -138,6 +136,9 @@ const Checkout = ({ cart, setCart }) => {
     return (
         <div style={styles.container}>
             <h1 style={styles.header}>Checkout</h1>
+            {successVisible && ( 
+                <Success onClose={() => setSuccessVisible(false)} />
+            )}
             {cart.length === 0 ? (
                 <p style={styles.emptyCart}>Your cart is empty.</p>
             ) : (
@@ -287,7 +288,7 @@ const styles = {
   container: {
       padding: '20px',
       textAlign: 'center',
-      backgroundColor: '#363636', // Set background to grey
+      backgroundColor: '#363636', 
       borderRadius: '10px',
       boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
       maxWidth: '600px',
@@ -295,17 +296,17 @@ const styles = {
   },
   header: {
       fontSize: '2rem',
-      color: '#000', // Set text color to black
+      color: '#000',
       marginBottom: '20px',
       color:"white",
   },
   emptyCart: {
       fontSize: '1.2rem',
-      color: '#000', // Set text color to black
+      color: '#000',
   },
   subHeader: {
       fontSize: '1.5rem',
-      color: '#000', // Set text color to black
+      color: '#000', 
       marginBottom: '15px',
       color:"white",
   },
@@ -331,7 +332,7 @@ const styles = {
   },
   sectionHeader: {
       fontSize: '1.3rem',
-      color: '#000', // Set text color to black
+      color: '#000', 
       marginBottom: '15px',
       color:"white",
   },

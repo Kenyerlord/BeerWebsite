@@ -8,6 +8,7 @@ const BeerInfo = ({ addToRack }) => {
   const { name } = useParams();
   const [beer, setBeer] = useState(null);
   const [error, setError] = useState(null);
+  const [notification, setNotification] = useState('');
 
   const beerTypeMapping = {
     1: 'IPA',
@@ -47,7 +48,6 @@ const BeerInfo = ({ addToRack }) => {
     4: 'Growler',
   };
 
-
   useEffect(() => {
     const fetchBeer = async () => {
       try {
@@ -64,6 +64,14 @@ const BeerInfo = ({ addToRack }) => {
     fetchBeer();
   }, [name]);
 
+  const handleAddToRack = (beer) => {
+    addToRack(beer);
+    setNotification('Added to rack!');
+    setTimeout(() => {
+      setNotification('');
+    }, 2000);
+  };
+
   if (error) {
     return <div>{error}</div>;
   }
@@ -74,18 +82,18 @@ const BeerInfo = ({ addToRack }) => {
   
   return (
     <div style={{ padding: '20px', display: 'flex', alignItems: 'center' }}>
-        <div>
+      <div>
         <img
-        src={`/image/${beer.Name}.png`}
-        alt={beer.Name}
-        onError={(e) => {
-          e.target.onerror = null;
-          e.target.src = notAvailableImage;
-        }}
-        style={{ width: '500px', height: 'auto', borderRadius: '5px', marginRight: '20px' }} 
-      />
-      <p>*The Image is just an Illustration and not representitive of the product*</p>
-        </div>
+          src={`/image/${beer.Name}.png`}
+          alt={beer.Name}
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = notAvailableImage;
+          }}
+          style={{ width: '500px', height: 'auto', borderRadius: '5px', marginRight: '20px' }} 
+        />
+        <p>*The Image is just an Illustration and not representative of the product*</p>
+      </div>
       
       <div>
         <h1 style={{fontSize:'3em'}}>{beer.Name}</h1>
@@ -96,28 +104,38 @@ const BeerInfo = ({ addToRack }) => {
         <p style={{fontSize:'2em'}}>Bottle Type: {BTMapping[beer.BottleType]}</p>
         <p style={{fontSize:'2em'}}>Price: {beer.Price ? beer.Price.toFixed(2) : 'N/A'}$</p>
 
-        
-
         <button 
-        onClick={() => addToRack(beer)} 
-        style={{ 
-          backgroundColor: '#001487', 
-          color: 'white', 
-          border: 'none', 
-          borderRadius: '5px', 
-          padding: '10px', 
-          cursor: 'pointer',
-          transition: 'background-color 0.3s'
-        }}
-        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#050969'}
-        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#001487'}
-        aria-label={`Add ${beer.Name} to rack`}
-      >
-        Add to Rack
-      </button>
+          onClick={() => handleAddToRack(beer)} 
+          style={{ 
+            backgroundColor: '#001487', 
+            color: 'white', 
+            border: 'none', 
+            borderRadius: '5px', 
+            padding: '10px', 
+            cursor: 'pointer',
+            transition: 'background-color 0.3s'
+          }}
+          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#050969'}
+          onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#001487'}
+          aria-label={`Add ${beer.Name} to rack`}
+        >
+          Add to Rack
+        </button>
+
+        {notification && (
+          <div style={{
+            marginTop: '10px',
+            padding: '5px',
+            backgroundColor: '#28a745',
+            color: 'white',
+            borderRadius: '5px',
+            textAlign: 'center',
+          }}>
+            {notification}
+          </div>
+        )}
       </div>
     </div>
-    
   );
 };
 

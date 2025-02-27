@@ -7,8 +7,9 @@ import NavDropdown from 'react-bootstrap/NavDropdown';
 import Logo from './logo.png';
 import Racklogo from './rack.png';
 
-function Menu({ user, handleLogout }) { // Accept user and handleLogout as props
+function Menu({ user, handleLogout, cart }) { 
     const imageStyle = { width: "60px", height: "40px" };
+    const cartItemCount = cart.reduce((total, item) => total + item.quantity, 0);
 
     return (
         <Navbar expand="lg" className="bg-dark-custom">
@@ -20,13 +21,13 @@ function Menu({ user, handleLogout }) { // Accept user and handleLogout as props
                 <Navbar.Toggle aria-controls="basic-navbar-nav" />
                 <Navbar.Collapse id="basic-navbar-nav">
                     <Nav className="me-auto">
-                        <Nav.Link as={Link} to="/">Home</Nav.Link>
                         <Nav.Link as={Link} to="/catalog">Catalog</Nav.Link>
                     </Nav>
                     <Nav className="ms-auto">
                         {user ? (
                             <NavDropdown title={user.name} id="basic-nav-dropdown">
                                 <NavDropdown.Item as={Link} to="/userprofile">User  Profile</NavDropdown.Item>
+                                <NavDropdown.Item as={Link} to="/purchase-history">Purchase History</NavDropdown.Item> 
                                 <NavDropdown.Divider />
                                 <NavDropdown.Item as={Link} to="/logout" onClick={handleLogout}>Log Out</NavDropdown.Item>
                             </NavDropdown>
@@ -36,8 +37,23 @@ function Menu({ user, handleLogout }) { // Accept user and handleLogout as props
                                 <Nav.Link as={Link} to="/login">Log In</Nav.Link>
                             </>
                         )}
-                        <Nav.Link as={Link} to="/rack">
+                        <Nav.Link as={Link} to="/rack" style={{ position: 'relative' }}>
                             <img src={Racklogo} style={imageStyle} alt="Rack Logo" />
+                            {cartItemCount > 0 && (
+                                <span style={{
+                                    position: 'absolute',
+                                    bottom: '0px',
+                                    right: '0px',
+                                    backgroundColor: 'red',
+                                    color: 'white',
+                                    borderRadius: '50%',
+                                    padding: '2px 6px',
+                                    fontSize: '12px',
+                                    transform: 'translate(50%, 50%)',
+                                }}>
+                                    {cartItemCount}
+                                </span>
+                            )}
                         </Nav.Link>
                     </Nav>
                 </Navbar.Collapse>

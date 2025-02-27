@@ -1,8 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import notAvailableImage from './assets/notavailable.webp';
 import { Link } from 'react-router-dom';
 
 const BeerCard = ({ beer, addToRack }) => {
+  const [notification, setNotification] = useState('');
+
+  const handleAddToRack = (beer) => {
+    addToRack(beer);
+    setNotification('Added to rack!');
+    setTimeout(() => {
+      setNotification('');
+    }, 2000);
+  };
+
   return (
     <div style={{ 
       border: '1px solid #ccc', 
@@ -28,7 +38,7 @@ const BeerCard = ({ beer, addToRack }) => {
         <p style={{ color: 'white' }}>Price: {beer.Price ? beer.Price.toFixed(2) : 'N/A'}$</p>
       </Link>
       <button 
-        onClick={() => addToRack(beer)} 
+        onClick={() => handleAddToRack(beer)} 
         style={{ 
           backgroundColor: '#001487', 
           color: 'white', 
@@ -44,6 +54,18 @@ const BeerCard = ({ beer, addToRack }) => {
       >
         Add to Rack
       </button>
+      {notification && (
+        <div style={{
+          marginTop: '10px',
+          padding: '5px',
+          backgroundColor: '#28a745',
+          color: 'white',
+          borderRadius: '5px',
+          textAlign: 'center',
+        }}>
+          {notification}
+        </div>
+      )}
     </div>
   );
 };

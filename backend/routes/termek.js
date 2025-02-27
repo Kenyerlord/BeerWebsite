@@ -101,29 +101,29 @@ router.get('/user/:id', async (req, res) => {
 });
 
 router.post('/order', async (req, res) => {
-    const { cart, buyerId } = req.body; 
-    const connection = await Db.pool.getConnection(); 
+    const { cart, buyerId, totalPrice, deliveryType, shippingInfo } = req.body;
+
+    console.log('Received order request:', { cart, buyerId, totalPrice, deliveryType, shippingInfo }); 
 
     try {
-        await connection.beginTransaction(); 
-        const [maxBidResult] = await connection.query('SELECT MAX(bid) AS maxBid FROM buyerbeer');
-        const newBid = (maxBidResult[0].maxBid || 0) + 1;
-        for (const item of cart) {
-            const beerId = item.beer.ID; 
-            const quantity = item.quantity;
-
-            const query = 'INSERT INTO buyerbeer (bid, beerid1, buyerid, number) VALUES (?, ?, ?, ?)';
-            await connection.query(query, [newBid, beerId, buyerId, quantity]);
-        }
-
-        await connection.commit();
-        res.status(201).json({ success: true, message: 'Order placed successfully', bid: newBid });
+        const response = await Db.insertOrder(cart, buyerId, totalPrice, deliveryType, shippingInfo);
+        res.status(201).json(response);
     } catch (error) {
-        await connection.rollback(); 
-        console.error('Error placing order:', error);
-        res.status(500).json({ success: false, message: 'Error placing order' });
-    } finally {
-        connection.release(); 
+        console.error('Error placing order:', error.message);
+        console.error('Error stack:', error.stack);
+        res.status(500).json({ success: false, message: 'Error placing order', error: error.message });
+    }
+});
+
+router.get('/purchase-history/:buyerId', async (req, res) => {
+    const buyerId = req.params.buyerId;
+
+    try {
+        const purchaseHistory = await Db.getPurchaseHistory(buyerId);
+        res.json(purchaseHistory);
+    } catch (error) {
+        console.error('Error fetching purchase history:', error);
+        res.status(500).json({ success: false, message: 'Error fetching purchase history' });
     }
 });
 

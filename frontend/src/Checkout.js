@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 import Success from './Success'; 
+import visaImage from './assets/visa.png'; 
+import masterCardImage from './assets/mastercard.png';
+import paypalImage from './assets/paypal.png'; 
 
 const Checkout = ({ cart, setCart }) => {
     const navigate = useNavigate();
@@ -21,8 +24,14 @@ const Checkout = ({ cart, setCart }) => {
         deliveryMethod: 'normal' 
     });
     const [successVisible, setSuccessVisible] = useState(false);
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-   
+    const paymentMethods = [
+        { value: 'Visa', label: 'Visa', image: visaImage },
+        { value: 'MasterCard', label: 'MasterCard', image: masterCardImage },
+        { value: 'PayPal', label: 'PayPal', image: paypalImage },
+    ];
+
     const getUserIdFromToken = () => {
         const token = localStorage.getItem('token');
         if (!token) {
@@ -33,7 +42,6 @@ const Checkout = ({ cart, setCart }) => {
         return decoded.id; 
     };
 
-    
     useEffect(() => {
         const fetchUserProfile = async () => {
             try {
@@ -64,7 +72,6 @@ const Checkout = ({ cart, setCart }) => {
         fetchUserProfile();
     }, [navigate]);
 
-    
     useEffect(() => {
         const basePrice = cart.reduce((total, item) => total + (item.beer.Price || 0) * item.quantity, 0);
         let deliveryFee = 0;
@@ -100,22 +107,38 @@ const Checkout = ({ cart, setCart }) => {
         }));
     };
 
+    const handlePaymentMethodChange = (method) => {
+        setShippingInfo(prevInfo => ({
+            ...prevInfo,
+            paymentMethod: method
+        }));
+        setIsDropdownOpen(false);
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         
         const userId = getUserIdFromToken(); 
         if (!userId) return;
-    
+        
         try {
             const response = await axios.post('http://localhost:8080/termek/order', {
                 cart,
-                buyerId: userId 
+                buyerId: userId,
+                totalPrice,
+                deliveryType: shippingInfo.deliveryMethod,
+                shippingInfo: {
+                    country: shippingInfo.country,
+                    city: shippingInfo.city,
+                    street: shippingInfo.street,
+                    house: shippingInfo.house
+                } 
             }, {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem('token')}`
                 }
             });
-    
+        
             if (response.data.success) {
                 console.log('Order placed:', {
                     cart,
@@ -201,16 +224,27 @@ const Checkout = ({ cart, setCart }) => {
                             style={styles.input} 
                         />
                         <h3 style={styles.sectionHeader}>Payment Information</h3>
-                        <select 
-                            name="paymentMethod" 
-                            value={shippingInfo.paymentMethod} 
-                            onChange={handleChange} 
-                            style={styles.select}
-                        >
-                            <option value="Visa">Visa</option>
-                            <option value="MasterCard">MasterCard</option>
-                            <option value="PayPal">PayPal</option>
-                        </select>
+                        <div style={styles.paymentDropdown} onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
+                            <div style={styles.selectedPayment}>
+                                <img 
+                                    src={paymentMethods.find(method => method.value === shippingInfo.paymentMethod)?.image} 
+                                    alt={shippingInfo.paymentMethod} 
+                                    style={styles.paymentImage} 
+                                />
+                                {shippingInfo.paymentMethod}
+                                <span style={styles.arrow}>{isDropdownOpen ? '▲' : '▼'}</span>
+                            </div>
+                            {isDropdownOpen && (
+                                <ul style={styles.paymentOptions}>
+                                    {paymentMethods.map(method => (
+                                        <li key={method.value} style={styles.paymentOption} onClick={() => handlePaymentMethodChange(method.value)}>
+                                            <img src={method.image} alt={method.label} style={styles.paymentImage} />
+                                            {method.label}
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
                         <input 
                             type="text" 
                             name="creditCard" 
@@ -345,14 +379,55 @@ const styles = {
       border: '1px solid #ccc',
       fontSize: '1rem',
   },
-  select: {
-      display: 'block',
+  paymentDropdown: {
+      position: 'relative',
+      cursor: 'pointer',
       margin: '10px auto',
       padding: '10px',
       width: '80%',
       borderRadius: '5px',
       border: '1px solid #ccc',
-      fontSize: '1rem',
+      backgroundColor: '#fff',
+      textAlign: 'left',
+  },
+  selectedPayment: {
+      display: 'flex',
+      alignItems: 'center',
+      color:'black',
+      justifyContent: 'space-between',
+  },
+  arrow: {
+      marginLeft: '10px',
+  },
+  paymentOptions: {
+      position: 'absolute',
+      top: '100%',
+      left: 0,
+      right: 0,
+      backgroundColor: '#fff',
+      border: '1px solid #ccc',
+      borderRadius: '5px',
+      zIndex: 1000,
+      maxHeight: '150px',
+      overflowY: 'auto',
+      padding: 0,
+      margin: 0,
+      listStyleType: 'none',
+  },
+  paymentOption: {
+      display: 'flex',
+      alignItems: 'center',
+      padding: '10px',
+      color:'black',
+      cursor: 'pointer',
+      '&:hover': {
+          backgroundColor: '#f0f0f0',
+      },
+  },
+  paymentImage: {
+      width: '30px',
+      height: 'auto',
+      marginRight: '10px',
   },
   radioLabel: {
       display: 'block',

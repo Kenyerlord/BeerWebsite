@@ -1,5 +1,8 @@
 import React from 'react';
-import './Footer.css'; // Make sure to import your CSS file
+import './Footer.css'; 
+import instagramIcon from './instagram.png'; 
+import facebookIcon from './facebook.png'; 
+import xIcon from './x.png'; 
 
 export default function Footer() {
   return (
@@ -16,9 +19,21 @@ export default function Footer() {
           <div className="col-lg-4 col-md-6 mb-4 mb-md-0">
             <h5 className="text-uppercase">Social Media</h5>
             <ul className="list-unstyled">
-              <li><a href="#!" className="text-white">Instagram</a></li>
-              <li><a href="#!" className="text-white">Facebook</a></li>
-              <li><a href="#!" className="text-white">X</a></li>
+              <li className="mb-2">
+                <a href="#!" className="text-white">
+                  <img src={instagramIcon} alt="Instagram" style={{ width: '30px', height: '30px' }} />
+                </a>
+              </li>
+              <li className="mb-2">
+                <a href="#!" className="text-white">
+                  <img src={facebookIcon} alt="Facebook" style={{ width: '39px', height: '25px' }} />
+                </a>
+              </li>
+              <li className="mb-2">
+                <a href="#!" className="text-white">
+                  <img src={xIcon} alt="X" style={{ width: '35px', height: '35px' }} />
+                </a>
+              </li>
             </ul>
           </div>
 

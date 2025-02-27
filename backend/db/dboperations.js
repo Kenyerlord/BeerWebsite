@@ -52,31 +52,62 @@ async function selectUserById(userId) {
     return result.length > 0 ? result[0] : null; 
 }
 
-async function insertOrder(cart, buyerId) {
+async function insertOrder(cart, buyerId, totalPrice, deliveryType, shippingInfo) {
     const connection = await pool.getConnection();
     try {
         await connection.beginTransaction();
 
         const [maxBidResult] = await connection.query('SELECT MAX(bid) AS maxBid FROM buyerbeer');
         const newBid = (maxBidResult[0].maxBid || 0) + 1; 
+        console.log('New Bid:', newBid); 
 
         for (const item of cart) {
-            const beerId = item.beer.id; 
+            const beerId = item.beer.ID; 
             const quantity = item.quantity;
 
-            const query = 'INSERT INTO buyerbeer (bid, beerid1, buyerid, number) VALUES (?, ?, ?, ?)';
-            await connection.query(query, [newBid, beerId, buyerId, quantity]); 
+            console.log('Inserting item:', { newBid, beerId, buyerId, quantity, totalPrice, deliveryType, shippingInfo }); 
+
+            const query = `
+                INSERT INTO buyerbeer (bid, beerid1, buyerid, number, totalprice, deliverytype, country, city, street, house) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `;
+            await connection.query(query, [
+                newBid, 
+                beerId, 
+                buyerId, 
+                quantity, 
+                totalPrice, 
+                deliveryType,
+                shippingInfo.country,
+                shippingInfo.city,
+                shippingInfo.street,
+                shippingInfo.house
+            ]); 
         }
 
         await connection.commit();
+        console.log('Order placed successfully:', { newBid, cart, totalPrice, deliveryType, shippingInfo });
         return { success: true, message: 'Order placed successfully', bid: newBid };
     } catch (error) {
         await connection.rollback();
-        console.error('Error inserting order:', error);
-        throw error;
+        console.error('Error inserting order:', error.message); 
+        console.error('Error stack:', error.stack); 
+        console.error('Failed to insert order with data:', { cart, buyerId, totalPrice, deliveryType, shippingInfo }); 
+        throw error; 
     } finally {
         connection.release(); 
     }
+}
+
+async function getPurchaseHistory(buyerId) {
+    const query = `
+        SELECT bid, beerid1, number, totalprice, deliverytype, country, city, street, house, date 
+        FROM buyerbeer 
+        WHERE buyerid = ? 
+        ORDER BY bid DESC
+    `;
+    const [result] = await pool.query(query, [buyerId]);
+    return result;
 }
 
 module.exports = {
@@ -87,5 +118,6 @@ module.exports = {
     insertUser ,
     updateUser ,
     selectUserById,
-    insertOrder
+    insertOrder,
+    getPurchaseHistory
 }
