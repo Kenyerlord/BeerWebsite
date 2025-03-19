@@ -46,7 +46,7 @@ async function updateUser (userId, mobile, countryaddress, cityaddress, streetad
 }
 
 async function selectUserById(userId) {
-    const query = 'SELECT mobile, countryaddress, cityaddress, streetaddress, houseaddress FROM buyer WHERE bid = ?';
+    const query = 'SELECT name, email, mobile, countryaddress, cityaddress, streetaddress, houseaddress FROM buyer WHERE bid = ?';
     const [result] = await pool.query(query, [userId]);
 
     return result.length > 0 ? result[0] : null; 

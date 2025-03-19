@@ -1,12 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { jwtDecode } from 'jwt-decode'; 
+import {jwtDecode} from 'jwt-decode'; 
+import HistoryModal from './HistoryModal';
 
 const History = () => {
     const [groupedHistory, setGroupedHistory] = useState([]);
-    const [beerNames, setBeerNames] = useState({});
+    const [beerData, setBeerData] = useState({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedOrder, setSelectedOrder] = useState(null);
+    const [buyerData, setBuyerData] = useState(null); 
 
     useEffect(() => {
         const fetchPurchaseHistory = async () => {
@@ -18,7 +22,7 @@ const History = () => {
             }
 
             const decoded = jwtDecode(token);
-            const userId = decoded.id;
+            const userId = decoded.id; 
 
             try {
                 const response = await axios.get(`http://localhost:8080/termek/purchase-history/${userId}`, {
@@ -27,7 +31,6 @@ const History = () => {
                     }
                 });
 
-                console.log('Purchase History Response:', response.data);
                 const groupedData = response.data.reduce((acc, item) => {
                     const key = `${item.bid}-${item.totalprice}-${item.deliverytype}`;
                     if (!acc[key]) {
@@ -40,6 +43,7 @@ const History = () => {
                             city: item.city || 'N/A',
                             street: item.street || 'N/A', 
                             house: item.house || 'N/A', 
+                            buyerId: item.buyerid, 
                             items: []
                         };
                     }
@@ -60,22 +64,48 @@ const History = () => {
             }
         };
 
-        const fetchBeerNames = async () => {
+        const fetchBeerData = async () => {
             try {
                 const response = await axios.get('http://localhost:8080/termek');
                 const beerMapping = {};
                 response.data.forEach(beer => {
-                    beerMapping[beer.ID] = beer.Name; 
+                    beerMapping[beer.ID] = {
+                        name: beer.Name,
+                        price: beer.Price
+                    };
                 });
-                setBeerNames(beerMapping);
+                setBeerData(beerMapping); 
             } catch (err) {
-                console.error('Error fetching beer names:', err);
+                console.error('Error fetching beer data:', err);
             }
         };
 
         fetchPurchaseHistory();
-        fetchBeerNames();
+        fetchBeerData();
     }, []);
+
+    const openModal = async (order) => {
+        setSelectedOrder(order);
+        setIsModalOpen(true);
+        const token = localStorage.getItem('token');
+        const decoded = jwtDecode(token);
+        const userId = decoded.id; 
+
+        try {
+            const response = await axios.get(`http://localhost:8080/termek/user/${userId}`); 
+            console.log('Buyer data fetched:', response.data);
+            setBuyerData(response.data);
+        } catch (err) {
+            console.error('Error fetching buyer data:', err);
+            setBuyerData(null);
+        }
+    };
+
+    const closeModal = () => {
+        setIsModalOpen(false);
+        setSelectedOrder(null);
+        setBuyerData(null);
+    };
 
     if (loading) return <p>Loading...</p>;
     if (error) return <p>{error}</p>;
@@ -96,10 +126,11 @@ const History = () => {
                             <p style={styles.deliveryAddress}>
                                 Delivery Address: {group.house}, {group.street}, {group.city}, {group.country}
                             </p>
+                            <button onClick={() => openModal(group)} style={styles.detailsButton}>View Details</button>
                             <ul style={styles.subItemList}>
                                 {group.items.map((item, index) => (
                                     <li key={`${group.orderId}-${item.beerid1}-${index}`} style={styles.subItem}>
-                                        <p>Beer Name: {beerNames[item.beerid1] || 'N/A'}</p>
+                                        <p>Beer Name: {beerData[item.beerid1]?.name || 'N/A'}</p>
                                         <p>Quantity: {item.number !== null ? item.number : 'N/A'}</p>
                                     </li>
                                 ))}
@@ -108,6 +139,12 @@ const History = () => {
                     ))}
                 </ul>
             )}
+            <HistoryModal 
+                isOpen={isModalOpen} 
+                onClose={closeModal} 
+                order={{ ...selectedOrder, beerData }} 
+                buyer={buyerData}
+            />
         </div>
     );
 };
@@ -172,6 +209,15 @@ const styles = {
         padding: '5px',
         backgroundColor: '#f9f9f9',
         borderRadius: '5px',
+    },
+    detailsButton: {
+        margin: '10px 0',
+        padding: '5px 10px',
+        backgroundColor: '#007bff',
+        color: 'white',
+        border: 'none',
+        borderRadius: '5px',
+        cursor: 'pointer',
     },
 };
 

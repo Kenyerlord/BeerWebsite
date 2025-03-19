@@ -44,7 +44,7 @@ const SignUp = () => {
                     <input
                         type="text"
                         id="name"
-                        placeholder="Enter name"
+                        placeholder="Enter name(Max 30 character)"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         required
@@ -68,7 +68,7 @@ const SignUp = () => {
                     <input
                         type="password"
                         id="password"
-                        placeholder="Enter password"
+                        placeholder="Enter password(Max 30 character)"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
